@@ -1,0 +1,31 @@
+# Build output
+target/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# Git
+.git/
+.gitattributes
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files (avoid recursive builds)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Maven wrapper (we use Maven from the build image)
+.mvn/
+mvnw
+mvnw.cmd
+
+# Docs
+README.md
+HELP.md

@@ -26,10 +26,20 @@ public class JwtService {
     private long refreshTokenExpiration;
 
     /**
-     * Tạo access token từ UserDetails
+     * Tạo access token từ UserDetails, chứa: userId, username, email (sub), roles
      */
     public String generateAccessToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails, accessTokenExpiration);
+        Map<String, Object> claims = new HashMap<>();
+
+        if (userDetails instanceof CustomUserDetails customUser) {
+            claims.put("userId", customUser.getUser().getId());
+            claims.put("username", customUser.getUser().getUsername());
+            claims.put("roles", customUser.getAuthorities().stream()
+                    .map(Object::toString)
+                    .toList());
+        }
+
+        return generateToken(claims, userDetails, accessTokenExpiration);
     }
 
     /**

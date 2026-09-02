@@ -14,12 +14,46 @@ public class RedisTokenService {
 
     private final RedisTemplate<String, String> redisTemplate;
 
+    private static final String ACCESS_TOKEN_PREFIX = "access_token:";
     private static final String BLACKLIST_PREFIX = "blacklist:";
     private static final String OTP_REGISTER_PREFIX = "otp:register:";
     private static final String OTP_RESET_PREFIX = "otp:reset:";
     private static final String PENDING_USER_PREFIX = "pending_user:";
     private static final long OTP_TTL_MINUTES = 5;
     private static final long PENDING_USER_TTL_MINUTES = 10;
+
+    // ==================== ACCESS TOKEN ====================
+
+    /**
+     * Lưu access token vào Redis với TTL (milliseconds)
+     */
+    public void saveAccessToken(String token, String email, long ttlMillis) {
+        if (token != null && !token.isEmpty() && ttlMillis > 0) {
+            String key = ACCESS_TOKEN_PREFIX + token;
+            redisTemplate.opsForValue().set(key, email, ttlMillis, TimeUnit.MILLISECONDS);
+            log.info("Access token đã được lưu vào Redis cho user {}, TTL: {}ms", email, ttlMillis);
+        }
+    }
+
+    /**
+     * Kiểm tra access token có tồn tại trong Redis không
+     */
+    public boolean isAccessTokenExists(String token) {
+        if (token == null || token.isEmpty()) return false;
+        String key = ACCESS_TOKEN_PREFIX + token;
+        return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+    }
+
+    /**
+     * Xóa access token khỏi Redis khi logout hoặc refresh
+     */
+    public void deleteAccessToken(String token) {
+        if (token != null && !token.isEmpty()) {
+            String key = ACCESS_TOKEN_PREFIX + token;
+            redisTemplate.delete(key);
+            log.info("Access token đã được xóa khỏi Redis");
+        }
+    }
 
     // ==================== BLACKLIST ====================
 

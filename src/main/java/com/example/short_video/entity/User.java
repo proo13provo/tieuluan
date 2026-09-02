@@ -26,7 +26,7 @@ public class User {
     @Column(nullable = false, unique = true, length = 100)
     private String email;
 
-    @Column(nullable = false)
+    @Column
     private String password;
 
     @Column(name = "avatar_url")
@@ -55,4 +55,9 @@ public class User {
     )
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<UserAuthProvider> authProviders = new ArrayList<>();
 }
+

@@ -37,6 +37,9 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/user/*/profile").permitAll()
+                        .requestMatchers("/api/user/*/videos").permitAll()
+                        .requestMatchers("/api/video/hashtags/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())

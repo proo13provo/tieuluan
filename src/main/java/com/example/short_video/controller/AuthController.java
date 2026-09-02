@@ -45,6 +45,15 @@ public class AuthController {
     }
 
     /**
+     * Đăng nhập bằng Google
+     * POST /api/auth/google
+     */
+    @PostMapping("/google")
+    public ResponseEntity<ApiResponse<AuthResponse>> googleLogin(@Valid @RequestBody GoogleLoginRequest request) {
+        return ResponseEntity.ok(authService.googleLogin(request));
+    }
+
+    /**
      * Làm mới access token
      * POST /api/auth/refresh
      */
