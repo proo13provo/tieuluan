@@ -19,9 +19,6 @@ import java.util.Map;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    /**
-     * 400 - Validation errors (DTO @Valid)
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(
             MethodArgumentNotValidException ex) {
@@ -42,72 +39,48 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(response);
     }
 
-    /**
-     * 400 - OTP không hợp lệ / hết hạn
-     */
     @ExceptionHandler(InvalidOtpException.class)
     public ResponseEntity<ApiResponse<Void>> handleInvalidOtp(InvalidOtpException ex) {
         return ResponseEntity.badRequest()
                 .body(ApiResponse.error(ex.getMessage()));
     }
 
-    /**
-     * 401 - Xác thực thất bại (sai email/password, tài khoản bị vô hiệu hóa)
-     */
     @ExceptionHandler(AuthenticationFailedException.class)
     public ResponseEntity<ApiResponse<Void>> handleAuthenticationFailed(AuthenticationFailedException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error(ex.getMessage()));
     }
 
-    /**
-     * 401 - Token không hợp lệ / hết hạn
-     */
     @ExceptionHandler(InvalidTokenException.class)
     public ResponseEntity<ApiResponse<Void>> handleInvalidToken(InvalidTokenException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error(ex.getMessage()));
     }
 
-    /**
-     * 401 - BadCredentialsException từ Spring Security
-     */
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiResponse<Void>> handleBadCredentials(BadCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error("Email hoặc mật khẩu không chính xác"));
     }
 
-    /**
-     * 404 - Không tìm thấy resource
-     */
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(ResourceNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error(ex.getMessage()));
     }
 
-    /**
-     * 404 - UsernameNotFoundException từ Spring Security
-     */
+
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleUsernameNotFound(UsernameNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.error(ex.getMessage()));
     }
-
-    /**
-     * 409 - Resource đã tồn tại (email/username trùng)
-     */
     @ExceptionHandler(ResourceAlreadyExistsException.class)
     public ResponseEntity<ApiResponse<Void>> handleResourceAlreadyExists(ResourceAlreadyExistsException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ApiResponse.error(ex.getMessage()));
     }
 
-    /**
-     * 500 - Lỗi gửi email
-     */
     @ExceptionHandler(EmailSendException.class)
     public ResponseEntity<ApiResponse<Void>> handleEmailSendException(EmailSendException ex) {
         log.error("Lỗi gửi email: {}", ex.getMessage());
@@ -115,9 +88,12 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("Không thể gửi email. Vui lòng thử lại sau."));
     }
 
-    /**
-     * 500 - Tất cả exception không xác định
-     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex) {
         log.error("Unexpected exception: ", ex);

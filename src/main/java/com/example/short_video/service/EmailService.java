@@ -20,9 +20,6 @@ public class EmailService {
     @Value("${mail.from}")
     private String fromEmail;
 
-    /**
-     * Gửi email chứa OTP đăng ký
-     */
     @Async
     public void sendRegistrationOtp(String toEmail, String otp) {
         String subject = "Short Video - Mã xác thực đăng ký";
@@ -30,9 +27,6 @@ public class EmailService {
         sendEmail(toEmail, subject, body);
     }
 
-    /**
-     * Gửi email chứa OTP reset password
-     */
     @Async
     public void sendResetPasswordOtp(String toEmail, String otp) {
         String subject = "Short Video - Mã xác thực đặt lại mật khẩu";
@@ -40,9 +34,6 @@ public class EmailService {
         sendEmail(toEmail, subject, body);
     }
 
-    /**
-     * Gửi email
-     */
     private void sendEmail(String to, String subject, String htmlBody) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -52,16 +43,11 @@ public class EmailService {
             helper.setSubject(subject);
             helper.setText(htmlBody, true);
             mailSender.send(message);
-            log.info("Email đã gửi thành công đến: {}", to);
         } catch (MessagingException e) {
-            log.error("Lỗi gửi email đến {}: {}", to, e.getMessage());
             throw new com.example.short_video.exception.EmailSendException("Không thể gửi email", e);
         }
     }
 
-    /**
-     * Tạo nội dung HTML cho email OTP
-     */
     private String buildOtpEmailBody(String title, String otp) {
         return """
                 <!DOCTYPE html>

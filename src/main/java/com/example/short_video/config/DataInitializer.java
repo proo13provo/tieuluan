@@ -22,22 +22,18 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // Khởi tạo Roles
         for (ERole eRole : ERole.values()) {
             if (roleRepository.findByName(eRole.name()).isEmpty()) {
                 roleRepository.save(Role.builder().name(eRole.name()).build());
                 log.info("Đã tạo role: {}", eRole.name());
             }
         }
-        log.info("Khởi tạo dữ liệu role hoàn tất");
 
-        // Khởi tạo Categories
         for (com.example.short_video.Enum.Category cat : com.example.short_video.Enum.Category.values()) {
             if (categoryRepository.findByName(cat.name()).isEmpty()) {
                 categoryRepository.save(Category.builder().name(cat.name()).build());
                 log.info("Đã tạo category: {}", cat.name());
             }
         }
-        log.info("Khởi tạo dữ liệu category hoàn tất");
     }
 }
