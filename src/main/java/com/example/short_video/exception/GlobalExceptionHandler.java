@@ -39,6 +39,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(response);
     }
 
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadable(
+            org.springframework.http.converter.HttpMessageNotReadableException ex) {
+        return ResponseEntity.badRequest()
+                .body(ApiResponse.error("Request body không hợp lệ hoặc bị thiếu (vui lòng gửi JSON)"));
+    }
+
     @ExceptionHandler(InvalidOtpException.class)
     public ResponseEntity<ApiResponse<Void>> handleInvalidOtp(InvalidOtpException ex) {
         return ResponseEntity.badRequest()
@@ -81,6 +88,12 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ex.getMessage()));
     }
 
+    @ExceptionHandler(AppException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAppException(AppException ex) {
+        return ResponseEntity.status(ex.getStatus())
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
     @ExceptionHandler(EmailSendException.class)
     public ResponseEntity<ApiResponse<Void>> handleEmailSendException(EmailSendException ex) {
         log.error("Lỗi gửi email: {}", ex.getMessage());
@@ -92,6 +105,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleIllegalArgumentException(IllegalArgumentException ex) {
         return ResponseEntity.badRequest()
                 .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNoResourceFound(org.springframework.web.servlet.resource.NoResourceFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.error("Không tìm thấy đường dẫn tài nguyên: " + ex.getResourcePath()));
+    }
+
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMethodNotSupported(org.springframework.web.HttpRequestMethodNotSupportedException ex) {
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(ApiResponse.error("Phương thức " + ex.getMethod() + " không được hỗ trợ cho endpoint này"));
     }
 
     @ExceptionHandler(Exception.class)

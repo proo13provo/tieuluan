@@ -61,4 +61,8 @@ public class Video {
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Long likes = 0L;
 }

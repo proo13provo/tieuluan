@@ -20,11 +20,6 @@ public class AIservice {
     private final ChatClient chatClient;
     private final CategoryRepository categoryRepository;
     private final ObjectMapper objectMapper;
-
-    /**
-     * Phân tích title và hashtags bằng Spring AI ChatClient để gán categories cho video.
-     * 1 video có thể có nhiều categories.
-     */
     public Set<Category> categorizeVideo(String title, List<String> hashtags) {
         Set<Category> matchedCategories = new HashSet<>();
 
@@ -41,23 +36,13 @@ public class AIservice {
             String hashtagsStr = (hashtags != null && !hashtags.isEmpty()) ? String.join(", ", hashtags) : "Không có";
 
             String prompt = """
-                    Bạn là hệ thống AI phân loại nội dung video ngắn.
-                    Hãy phân tích tiêu đề và danh sách hashtag sau đây, rồi chọn 1 hoặc NHIỀU thể loại phù hợp nhất từ danh sách thể loại cho trước.
+                    Phân loại video vào 1+ thể loại từ: [%s]
+                    Chỉ dùng đúng tên thể loại trong danh sách.
+                    Không rõ → ["OTHER"].
+                    Chỉ trả JSON array.
                     
-                    Danh sách thể loại hợp lệ:
-                    [%s]
-                    
-                    Quy tắc:
-                    1. Một video có thể thuộc nhiều thể loại (ví dụ video hướng dẫn lập trình có thể thuộc PROGRAMMING, TECHNOLOGY và EDUCATION).
-                    2. CHỈ ĐƯỢC CHỌN các thể loại có trong danh sách trên, tên viết hoa chính xác.
-                    3. Trả về định dạng JSON array chứa tên các thể loại đã chọn, ví dụ: ["PROGRAMMING", "TECHNOLOGY"]
-                    4. Nếu không rõ hoặc không thuộc thể loại cụ thể nào, trả về: ["OTHER"]
-                    
-                    Thông tin video:
-                    - Tiêu đề: "%s"
-                    - Hashtags: %s
-                    
-                    Chỉ trả về duy nhất mảng JSON, không kèm bất kỳ văn bản giải thích nào khác.
+                    Tiêu đề: "%s"
+                    Hashtags: %s
                     """.formatted(availableCategories, title != null ? title : "", hashtagsStr);
 
             String responseContent = chatClient.prompt()

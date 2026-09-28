@@ -10,21 +10,8 @@ import java.util.Optional;
 
 @Repository
 public interface HashtagRepository extends JpaRepository<Hashtag, Long> {
-
     Optional<Hashtag> findByName(String name);
-
-    /**
-     * Tìm các hashtag bắt đầu bằng tiền tố prefix, sắp xếp theo lượt sử dụng giảm dần
-     */
     List<Hashtag> findByNameStartingWithIgnoreCaseOrderByUsageCountDesc(String prefix, Pageable pageable);
-
-    /**
-     * Tìm các hashtag có chứa từ khóa keyword, sắp xếp theo lượt sử dụng giảm dần
-     */
     List<Hashtag> findByNameContainingIgnoreCaseOrderByUsageCountDesc(String keyword, Pageable pageable);
-
-    /**
-     * Lấy danh sách hashtag thịnh hành / dùng nhiều nhất
-     */
     List<Hashtag> findAllByOrderByUsageCountDesc(Pageable pageable);
 }

@@ -25,4 +25,6 @@ public class VideoResponse {
     private List<String> categories;
     private String status;
     private Instant createdAt;
+    private long likes;
+    private boolean liked;
 }

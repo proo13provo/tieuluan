@@ -34,8 +34,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
-
-        // Nếu không có Bearer token, bỏ qua filter
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -44,23 +42,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt = authHeader.substring(7);
 
         try {
-            // Kiểm tra token có trong blacklist không
             if (redisTokenService.isBlacklisted(jwt)) {
-                log.warn("Token đã bị blacklist");
                 filterChain.doFilter(request, response);
                 return;
             }
-
-            // Kiểm tra token có tồn tại trong Redis không
             if (!redisTokenService.isAccessTokenExists(jwt)) {
-                log.warn("Access token không tồn tại trong Redis hoặc đã hết hạn");
                 filterChain.doFilter(request, response);
                 return;
             }
 
             final String userEmail = jwtService.extractUsername(jwt);
-
-            // Nếu đã authenticate rồi thì bỏ qua
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
 

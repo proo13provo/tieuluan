@@ -1,5 +1,6 @@
 package com.example.short_video.dto.response;
 
+import com.example.short_video.Enum.Gender;
 import lombok.*;
 
 /**
@@ -15,6 +16,7 @@ public class UserProfileResponse {
     private String username;
     private String avatarUrl;
     private String bio;
+    private Gender gender;
     private long followerCount;
     private long followingCount;
     private long totalLikes;

@@ -20,12 +20,17 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 
+import com.example.short_video.dto.response.FollowStatusResponse;
+import com.example.short_video.dto.response.UserSummaryResponse;
+import com.example.short_video.service.FollowService;
+
 @RestController
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
+    private final FollowService followService;
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserProfileResponse>> getCurrentUser(
@@ -86,6 +91,41 @@ public class UserController {
             @PathVariable Long userId,
             @RequestParam(value = "status", required = false) VideoStatus status) {
         return ResponseEntity.ok(userService.getUserVideos(userId, status));
+    }
+
+    // ─── FOLLOW & MUTUAL FRIENDS ──────────────────────────────────────────
+
+    @PostMapping("/{userId}/follow")
+    public ResponseEntity<ApiResponse<FollowStatusResponse>> toggleFollow(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new AuthenticationFailedException("Vui lòng đăng nhập để thực hiện chức năng này");
+        }
+        FollowStatusResponse response = followService.toggleFollow(userDetails.getUser(), userId);
+        String msg = response.isFollowing() ? "Đã theo dõi người dùng" : "Đã hủy theo dõi người dùng";
+        return ResponseEntity.ok(ApiResponse.success(msg, response));
+    }
+
+    @GetMapping("/{userId}/follow-status")
+    public ResponseEntity<ApiResponse<FollowStatusResponse>> getFollowStatus(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new AuthenticationFailedException("Vui lòng đăng nhập để thực hiện chức năng này");
+        }
+        FollowStatusResponse response = followService.getFollowStatus(userDetails.getUser(), userId);
+        return ResponseEntity.ok(ApiResponse.success("Trạng thái theo dõi", response));
+    }
+
+    @GetMapping("/me/friends")
+    public ResponseEntity<ApiResponse<List<UserSummaryResponse>>> getMyFriends(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            throw new AuthenticationFailedException("Vui lòng đăng nhập để thực hiện chức năng này");
+        }
+        List<UserSummaryResponse> friends = followService.getMutualFriends(userDetails.getUser());
+        return ResponseEntity.ok(ApiResponse.success("Danh sách bạn bè cùng theo dõi", friends));
     }
 }
 

@@ -28,9 +28,6 @@ public class CustomUserDetails implements UserDetails {
         return user.getPassword();
     }
 
-    /**
-     * Sử dụng email làm username cho authentication
-     */
     @Override
     public String getUsername() {
         return user.getEmail();

@@ -4,7 +4,6 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.example.short_video.dto.response.UploadResult;
 import com.example.short_video.service.imp.CloudinaryServiceImp;
-import io.netty.util.internal.ObjectUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;

@@ -1,6 +1,8 @@
 package com.example.short_video.service;
 
 import com.example.short_video.Enum.VideoStatus;
+import com.example.short_video.dto.request.UpdateBioRequest;
+import com.example.short_video.dto.request.UpdateProfileRequest;
 import com.example.short_video.dto.response.*;
 import com.example.short_video.entity.User;
 import com.example.short_video.entity.Video;
@@ -15,7 +17,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,24 +34,14 @@ public class UserService {
     private final LikeRepository likeRepository;
     private final UserMapper userMapper;
     private final VideoMapper videoMapper;
-
-    /**
-     * Lấy thông tin profile của người dùng hiện tại (đã đăng nhập).
-     * Bao gồm: id, username, bio, avatarUrl, follower, following, totalLikes.
-     */
+    private final CloudinaryService cloudinaryService;
     @Transactional(readOnly = true)
     public ApiResponse<UserProfileResponse> getCurrentUserProfile(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
-
-        log.info("Lấy profile thành công cho user: {}", user.getEmail());
         return ApiResponse.success("Lấy thông tin người dùng thành công", buildUserProfile(user));
     }
 
-    /**
-     * Lấy thông tin profile của một user theo userId.
-     * Dùng cho: xem profile người khác.
-     */
     @Transactional(readOnly = true)
     public ApiResponse<UserProfileResponse> getUserProfileById(Long userId) {
         User user = userRepository.findById(userId)
@@ -55,18 +49,12 @@ public class UserService {
 
         return ApiResponse.success("Lấy thông tin người dùng thành công", buildUserProfile(user));
     }
-
-    /**
-     * Lấy danh sách video của người dùng hiện tại (đã đăng nhập) theo trạng thái (nếu status = null thì lấy tất cả).
-     */
     @Transactional(readOnly = true)
     public ApiResponse<List<VideoResponse>> getMyVideos(String email, VideoStatus status) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
 
-        List<Video> videos = (status != null)
-                ? videoRepository.findByUserAndStatusOrderByCreatedAtDesc(user, status)
-                : videoRepository.findByUserOrderByCreatedAtDesc(user);
+        List<Video> videos = findUserVideos(user, status);
 
         List<VideoResponse> videoResponses = videos.stream()
                 .map(videoMapper::toVideoResponse)
@@ -74,30 +62,72 @@ public class UserService {
 
         return ApiResponse.success("Lấy danh sách video thành công", videoResponses);
     }
-
-    /**
-     * Lấy danh sách video của một user theo userId và trạng thái (nếu status = null thì lấy tất cả).
-     * Dùng cho: xem video người khác hoặc chính mình.
-     */
     @Transactional(readOnly = true)
     public ApiResponse<List<VideoResponse>> getUserVideos(Long userId, VideoStatus status) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
-
-        List<Video> videos = (status != null)
-                ? videoRepository.findByUserAndStatusOrderByCreatedAtDesc(user, status)
-                : videoRepository.findByUserOrderByCreatedAtDesc(user);
-
+        List<Video> videos = findUserVideos(user, status);
         List<VideoResponse> videoResponses = videos.stream()
                 .map(videoMapper::toVideoResponse)
                 .collect(Collectors.toList());
 
         return ApiResponse.success("Lấy danh sách video thành công", videoResponses);
     }
+    @Transactional
+    public ApiResponse<UserProfileResponse> updateBio(String email, UpdateBioRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
 
-    /**
-     * Build UserProfileResponse từ User entity (dùng chung cho /me và /{userId}/profile)
-     */
+        String bio = request != null && request.getBio() != null ? request.getBio().trim() : null;
+        user.setBio(bio);
+        User savedUser = userRepository.save(user);
+
+        return ApiResponse.success("Cập nhật tiểu sử thành công", buildUserProfile(savedUser));
+    }
+
+    @Transactional
+    public ApiResponse<UserProfileResponse> updateAvatar(String email, MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Vui lòng chọn file hình ảnh đại diện");
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new IllegalArgumentException("Định dạng file không hợp lệ. Vui lòng chọn file ảnh (JPEG, PNG, WEBP,...)");
+        }
+
+        if (file.getSize() > 10 * 1024 * 1024) {
+            throw new IllegalArgumentException("Dung lượng file ảnh không được vượt quá 10MB");
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
+
+        UploadResult uploadResult = cloudinaryService.uploadImg(file);
+        user.setAvatarUrl(uploadResult.getUrl());
+        User savedUser = userRepository.save(user);
+
+        return ApiResponse.success("Cập nhật ảnh đại diện thành công", buildUserProfile(savedUser));
+    }
+
+    @Transactional
+    public ApiResponse<UserProfileResponse> updateProfile(String email, UpdateProfileRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
+
+        if (request != null) {
+            if (request.getBio() != null) {
+                user.setBio(request.getBio().trim());
+            }
+            if (request.getGender() != null) {
+                user.setGender(request.getGender());
+            }
+        }
+        User savedUser = userRepository.save(user);
+
+        return ApiResponse.success("Cập nhật thông tin thành công", buildUserProfile(savedUser));
+    }
+
     private UserProfileResponse buildUserProfile(User user) {
         long followerCount = followRepository.countByFollowing(user);
         long followingCount = followRepository.countByFollower(user);
@@ -105,4 +135,10 @@ public class UserService {
 
         return userMapper.toUserProfileResponse(user, followerCount, followingCount, totalLikes);
     }
+    private List<Video> findUserVideos(User user, VideoStatus status) {
+        return (status != null)
+                ? videoRepository.findByUserAndStatusOrderByCreatedAtDesc(user, status)
+                : videoRepository.findByUserOrderByCreatedAtDesc(user);
+    }
+
 }

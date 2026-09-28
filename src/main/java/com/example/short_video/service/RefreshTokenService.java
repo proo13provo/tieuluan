@@ -16,22 +16,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Slf4j
 public class RefreshTokenService {
-
     private final JwtService jwtService;
-
-    /**
-     * Tạo refresh token (JWT) cho user.
-     * Token sẽ được trả về cho FE lưu vào flutter_secure_storage.
-     */
     public String createRefreshToken(UserDetails userDetails) {
         return jwtService.generateRefreshToken(userDetails);
     }
-
-    /**
-     * Xác thực refresh token.
-     * Kiểm tra token hợp lệ (chữ ký đúng + chưa hết hạn).
-     * Trả về email (username) nếu hợp lệ.
-     */
     public String verifyRefreshToken(String refreshToken) {
         try {
             if (jwtService.isTokenExpired(refreshToken)) {

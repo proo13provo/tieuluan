@@ -23,12 +23,6 @@ import java.util.List;
 public class VideoController {
 
     private final VideoService videoService;
-
-    /**
-     * Upload video lên Cloudinary và lưu bản nháp (DRAFT).
-     * Title và hashtags là tùy chọn (không bắt buộc).
-     * POST /api/video/upload-video
-     */
     @PostMapping(value = "/upload-video", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<VideoUploadResponse>> uploadVideo(
             @RequestParam(value = "title", required = false) String title,
@@ -42,10 +36,6 @@ public class VideoController {
         return ResponseEntity.ok(ApiResponse.success("Upload video thành công dưới dạng bản nháp (DRAFT)", response));
     }
 
-    /**
-     * Cập nhật title, hashtags và chuyển trạng thái video từ DRAFT sang PUBLISHED.
-     * Hỗ trợ cả PUT và POST: /api/video/{videoId}/publish
-     */
     @RequestMapping(value = "/{videoId}/publish", method = {RequestMethod.PUT, RequestMethod.POST})
     public ResponseEntity<ApiResponse<VideoUploadResponse>> publishVideo(
             @PathVariable Long videoId,
@@ -58,10 +48,6 @@ public class VideoController {
         return ResponseEntity.ok(ApiResponse.success("Đăng video thành công", response));
     }
 
-    /**
-     * Gợi ý / Tìm kiếm danh sách hashtag theo từ khóa hoặc tiền tố (VD: ?q=a hoặc ?q=an)
-     * GET /api/video/hashtags/suggest?q=an&limit=10
-     */
     @GetMapping("/hashtags/suggest")
     public ResponseEntity<ApiResponse<List<HashtagDto>>> suggestHashtags(
             @RequestParam(value = "q", required = false) String query,

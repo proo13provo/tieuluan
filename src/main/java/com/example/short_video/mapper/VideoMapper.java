@@ -16,14 +16,12 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring", uses = HashtagMapper.class)
 public interface VideoMapper {
 
-    // ====== Video → VideoResponse ======
 
     @Mapping(target = "hashtags", source = "hashtags")
     @Mapping(target = "categories", source = "categories", qualifiedByName = "categoriesToNames")
     @Mapping(target = "status", expression = "java(video.getStatus() != null ? video.getStatus().name() : null)")
     VideoResponse toVideoResponse(Video video);
 
-    // ====== Video → VideoUploadResponse ======
 
     @Mapping(target = "userId", source = "user.id")
     @Mapping(target = "username", source = "user.username")
@@ -32,7 +30,6 @@ public interface VideoMapper {
     @Mapping(target = "status", expression = "java(video.getStatus() != null ? video.getStatus().name() : null)")
     VideoUploadResponse toVideoUploadResponse(Video video);
 
-    // ====== Helper methods ======
 
     @Named("categoriesToNames")
     default List<String> categoriesToNames(Set<Category> categories) {

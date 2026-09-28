@@ -25,9 +25,6 @@ public class JwtService {
     @Value("${jwt.refresh-token-expiration}")
     private long refreshTokenExpiration;
 
-    /**
-     * Tạo access token từ UserDetails, chứa: userId, username, email (sub), roles
-     */
     public String generateAccessToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
 
@@ -41,24 +38,9 @@ public class JwtService {
 
         return generateToken(claims, userDetails, accessTokenExpiration);
     }
-
-    /**
-     * Tạo access token với extra claims
-     */
-    public String generateAccessToken(Map<String, Object> extraClaims, UserDetails userDetails) {
-        return generateToken(extraClaims, userDetails, accessTokenExpiration);
-    }
-
-    /**
-     * Tạo refresh token
-     */
     public String generateRefreshToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails, refreshTokenExpiration);
     }
-
-    /**
-     * Tạo JWT token
-     */
     private String generateToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {
         return Jwts.builder()
                 .claims(extraClaims)
@@ -69,31 +51,17 @@ public class JwtService {
                 .compact();
     }
 
-    /**
-     * Extract username (email) từ token
-     */
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    /**
-     * Extract expiration date từ token
-     */
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
-
-    /**
-     * Extract một claim cụ thể
-     */
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
-
-    /**
-     * Extract tất cả claims
-     */
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())
@@ -101,25 +69,14 @@ public class JwtService {
                 .parseSignedClaims(token)
                 .getPayload();
     }
-
-    /**
-     * Kiểm tra token hợp lệ
-     */
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }
-
-    /**
-     * Kiểm tra token đã hết hạn
-     */
     public boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
-    /**
-     * Lấy thời gian còn lại của token (milliseconds)
-     */
     public long getRemainingExpiration(String token) {
         Date expiration = extractExpiration(token);
         return expiration.getTime() - System.currentTimeMillis();

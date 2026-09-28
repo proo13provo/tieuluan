@@ -10,12 +10,7 @@ import java.util.List;
 
 @Repository
 public interface VideoRepository extends JpaRepository<Video, Long> {
-
-    /** Lấy tất cả video của user, sắp xếp theo thời gian mới nhất */
     List<Video> findByUserOrderByCreatedAtDesc(User user);
-
-    /** Lấy tất cả video của user theo trạng thái, sắp xếp theo thời gian mới nhất */
     List<Video> findByUserAndStatusOrderByCreatedAtDesc(User user, VideoStatus status);
 
-    List<Video> findByid(Long id);
 }
