@@ -36,9 +36,16 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/user/*/profile").permitAll()
                         .requestMatchers("/api/user/*/videos").permitAll()
+                        .requestMatchers("/api/user/*/followers").permitAll()
+                        .requestMatchers("/api/user/*/following").permitAll()
                         .requestMatchers("/api/video/hashtags/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/live/feed").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/live/user/**").permitAll()

@@ -17,9 +17,13 @@ import java.util.stream.Collectors;
 public interface VideoMapper {
 
 
+    @Mapping(target = "userId", source = "user.id")
+    @Mapping(target = "username", source = "user.username")
+    @Mapping(target = "userAvatar", source = "user.avatarUrl")
     @Mapping(target = "hashtags", source = "hashtags")
     @Mapping(target = "categories", source = "categories", qualifiedByName = "categoriesToNames")
     @Mapping(target = "status", expression = "java(video.getStatus() != null ? video.getStatus().name() : null)")
+    @Mapping(target = "liked", ignore = true)
     VideoResponse toVideoResponse(Video video);
 
 

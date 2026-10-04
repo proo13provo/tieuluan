@@ -15,5 +15,7 @@ public class UserSummaryResponse {
     private String username;
     private String avatarUrl;
     private String bio;
+    private boolean isFollowing;
+    private boolean isFollowedBy;
     private boolean isMutual;
 }

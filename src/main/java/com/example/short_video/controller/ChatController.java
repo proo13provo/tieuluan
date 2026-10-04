@@ -12,6 +12,7 @@ import com.example.short_video.service.FollowService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,6 +23,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/chat")
 @RequiredArgsConstructor
+@Tag(name = "Nhắn tin (Chat)", description = "Các API nhắn tin trực tiếp giữa bạn bè cùng theo dõi (Mutual Follow)")
 public class ChatController {
 
     private final ChatService chatService;

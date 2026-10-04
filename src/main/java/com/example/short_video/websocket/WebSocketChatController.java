@@ -1,17 +1,17 @@
 package com.example.short_video.controller;
 
-import com.example.short_video.dto.request.SendMessageRequest;
-import com.example.short_video.dto.response.ChatMessageResponse;
-import com.example.short_video.security.CustomUserDetails;
-import com.example.short_video.service.ChatService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.security.Principal;
+
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
-import java.security.Principal;
+import com.example.short_video.dto.request.SendMessageRequest;
+import com.example.short_video.security.CustomUserDetails;
+import com.example.short_video.service.ChatService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Controller xử lý nhận tin nhắn gửi trực tiếp qua WebSocket STOMP.

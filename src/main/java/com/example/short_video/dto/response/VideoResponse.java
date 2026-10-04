@@ -27,4 +27,7 @@ public class VideoResponse {
     private Instant createdAt;
     private long likes;
     private boolean liked;
+    private Long userId;
+    private String username;
+    private String userAvatar;
 }

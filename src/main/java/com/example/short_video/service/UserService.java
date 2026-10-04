@@ -44,10 +44,27 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public ApiResponse<UserProfileResponse> getUserProfileById(Long userId) {
+        return getUserProfileById(userId, null);
+    }
+
+    @Transactional(readOnly = true)
+    public ApiResponse<UserProfileResponse> getUserProfileById(Long userId, User currentUser) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng"));
 
-        return ApiResponse.success("Lấy thông tin người dùng thành công", buildUserProfile(user));
+        UserProfileResponse response = buildUserProfile(user);
+        if (currentUser != null && !currentUser.getId().equals(userId)) {
+            boolean isFollowing = followRepository.existsByFollowerAndFollowing(currentUser, user);
+            boolean isFollowedBy = followRepository.existsByFollowerAndFollowing(user, currentUser);
+            response.setIsFollowing(isFollowing);
+            response.setIsFollowedBy(isFollowedBy);
+            response.setIsMutual(isFollowing && isFollowedBy);
+        } else if (currentUser != null && currentUser.getId().equals(userId)) {
+            response.setIsFollowing(false);
+            response.setIsFollowedBy(false);
+            response.setIsMutual(false);
+        }
+        return ApiResponse.success("Lấy thông tin người dùng thành công", response);
     }
     @Transactional(readOnly = true)
     public ApiResponse<List<VideoResponse>> getMyVideos(String email, VideoStatus status) {

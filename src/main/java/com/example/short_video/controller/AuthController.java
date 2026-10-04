@@ -4,6 +4,7 @@ import com.example.short_video.dto.request.*;
 import com.example.short_video.dto.response.ApiResponse;
 import com.example.short_video.dto.response.AuthResponse;
 import com.example.short_video.service.AuthService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Tag(name = "Xác thực (Auth)", description = "Các API đăng ký, đăng nhập, OTP, Google login, refresh token")
 public class AuthController {
 
     private final AuthService authService;

@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/live")
 @RequiredArgsConstructor
+@Tag(name = "Phát trực tiếp (LiveStream)", description = "Các API phát trực tiếp, tạo/kết thúc phòng live, Zego token, danh sách live feed")
 public class LiveStreamController {
 
     private final LiveStreamService liveStreamService;

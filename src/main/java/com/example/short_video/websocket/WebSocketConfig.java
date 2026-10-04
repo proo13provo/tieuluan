@@ -1,10 +1,5 @@
 package com.example.short_video.config;
 
-import com.example.short_video.security.CustomUserDetailsService;
-import com.example.short_video.security.JwtService;
-import com.example.short_video.service.RedisTokenService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -21,6 +16,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+
+import com.example.short_video.security.CustomUserDetailsService;
+import com.example.short_video.security.JwtService;
+import com.example.short_video.service.RedisTokenService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @EnableWebSocketMessageBroker

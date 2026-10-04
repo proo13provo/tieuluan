@@ -20,4 +20,7 @@ public class UserProfileResponse {
     private long followerCount;
     private long followingCount;
     private long totalLikes;
+    private Boolean isFollowing;
+    private Boolean isFollowedBy;
+    private Boolean isMutual;
 }
