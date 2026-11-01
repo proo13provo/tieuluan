@@ -35,4 +35,9 @@ public interface WatchHistoryRepository extends JpaRepository<WatchHistory, Long
     boolean existsByUserAndVideo(User user, Video video);
 
     long countByUser(User user);
+
+    java.util.List<WatchHistory> findTop100ByUserOrderByLastWatchedAtDesc(User user);
+
+    @Query("SELECT w.video.id FROM WatchHistory w WHERE w.user = :user")
+    java.util.List<Long> findWatchedVideoIdsByUser(@Param("user") User user);
 }

@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,7 +24,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/chat")
 @RequiredArgsConstructor
-@Tag(name = "Nhắn tin (Chat)", description = "Các API nhắn tin trực tiếp giữa bạn bè cùng theo dõi (Mutual Follow)")
+@Tag(name = "Nhắn tin (Chat)", description = "Các API nhắn tin trực tiếp và trao đổi tin nhắn qua WebSocket realtime")
 public class ChatController {
 
     private final ChatService chatService;
@@ -46,6 +47,16 @@ public class ChatController {
         ChatMessageResponse res = chatService.sendMessage(
                 userDetails.getUser(), targetUserId, request.getContent());
         return ResponseEntity.ok(ApiResponse.success("Gửi tin nhắn thành công", res));
+    }
+
+    @Operation(summary = "Chia sẻ video tới cuộc trò chuyện gần nhất")
+    @PostMapping("/share-video/{videoId}")
+    public ResponseEntity<ApiResponse<ChatMessageResponse>> shareVideoToLatestConversation(
+            @PathVariable Long videoId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        requireAuth(userDetails);
+        ChatMessageResponse response = chatService.shareVideoWithLatestChat(userDetails.getUser(), videoId);
+        return ResponseEntity.ok(ApiResponse.success("Đã chia sẻ video tới cuộc trò chuyện gần nhất", response));
     }
 
     @GetMapping("/history/{targetUserId}")
@@ -98,7 +109,7 @@ public class ChatController {
         return ResponseEntity.ok(ApiResponse.success("Kiểm tra quyền nhắn tin", Map.of(
                 "canChat", canChat,
                 "targetUserId", targetUserId,
-                "reason", canChat ? "Đủ điều kiện (hai người cùng theo dõi nhau)" : "Chưa đủ điều kiện (cần cùng theo dõi nhau)"
+                "reason", canChat ? "Đủ điều kiện nhắn tin" : "Không thể tự nhắn tin cho chính mình hoặc tài khoản không tồn tại / đang bị khóa"
         )));
     }
 

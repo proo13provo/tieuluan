@@ -1,5 +1,6 @@
 package com.example.short_video.entity;
 
+import com.example.short_video.Enum.MessageType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -34,6 +35,15 @@ public class ChatMessage {
     @Column(nullable = false, length = 2000)
     private String content;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "message_type", length = 20)
+    @Builder.Default
+    private MessageType messageType = MessageType.TEXT;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "video_id")
+    private Video video;
+
     @Column(name = "conversation_id", nullable = false, length = 100)
     private String conversationId;
 
@@ -45,10 +55,6 @@ public class ChatMessage {
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
-    /**
-     * Sinh conversationId chuẩn xác dựa trên 2 User ID để luôn đồng nhất
-     * bất kể ai là người gửi trước. E.g. "chat_2_5"
-     */
     public static String buildConversationId(Long userId1, Long userId2) {
         long min = Math.min(userId1, userId2);
         long max = Math.max(userId1, userId2);

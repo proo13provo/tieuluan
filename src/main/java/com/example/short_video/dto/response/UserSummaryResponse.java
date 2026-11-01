@@ -18,4 +18,6 @@ public class UserSummaryResponse {
     private boolean isFollowing;
     private boolean isFollowedBy;
     private boolean isMutual;
+    private Long followerCount;
+    private String matchReason;
 }

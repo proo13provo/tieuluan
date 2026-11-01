@@ -30,4 +30,6 @@ public class VideoResponse {
     private Long userId;
     private String username;
     private String userAvatar;
+    private String matchReason;
+    private Double searchScore;
 }

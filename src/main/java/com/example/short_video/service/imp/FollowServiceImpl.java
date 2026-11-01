@@ -171,6 +171,71 @@ public class FollowServiceImpl implements FollowService {
 
     @Override
     @Transactional(readOnly = true)
+    public FollowStatusResponse getFollowStatusBetween(Long sourceUserId, Long targetUserId) {
+        if (sourceUserId == null || targetUserId == null) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "sourceUserId và targetUserId không được để trống");
+        }
+        User sourceUser = userRepository.findById(sourceUserId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng #" + sourceUserId));
+        return getFollowStatus(sourceUser, targetUserId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, FollowStatusResponse> getBatchFollowStatus(User currentUser, Collection<Long> targetUserIds) {
+        if (targetUserIds == null || targetUserIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        Set<Long> uniqueIds = targetUserIds.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        if (uniqueIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        Set<Long> followingIds = (currentUser != null)
+                ? followRepository.findFollowingIdsIn(currentUser, uniqueIds)
+                : Collections.emptySet();
+
+        Set<Long> followerIds = (currentUser != null)
+                ? followRepository.findFollowerIdsIn(currentUser, uniqueIds)
+                : Collections.emptySet();
+
+        Map<Long, Long> followerCountMap = new HashMap<>();
+        for (Object[] row : followRepository.countFollowersGroupedByUserIds(uniqueIds)) {
+            followerCountMap.put((Long) row[0], ((Number) row[1]).longValue());
+        }
+
+        Map<Long, Long> followingCountMap = new HashMap<>();
+        for (Object[] row : followRepository.countFollowingGroupedByUserIds(uniqueIds)) {
+            followingCountMap.put((Long) row[0], ((Number) row[1]).longValue());
+        }
+
+        Map<Long, FollowStatusResponse> result = new LinkedHashMap<>();
+        for (Long uid : uniqueIds) {
+            boolean isFollowing = followingIds.contains(uid);
+            boolean isFollowedBy = followerIds.contains(uid);
+            boolean isMutual = isFollowing && isFollowedBy;
+            long fCount = followerCountMap.getOrDefault(uid, 0L);
+            long fgCount = followingCountMap.getOrDefault(uid, 0L);
+
+            result.put(uid, FollowStatusResponse.builder()
+                    .targetUserId(uid)
+                    .isFollowing(isFollowing)
+                    .isFollowedBy(isFollowedBy)
+                    .isMutual(isMutual)
+                    .followerCount(fCount)
+                    .followingCount(fgCount)
+                    .build());
+        }
+
+        return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<UserSummaryResponse> getFollowers(Long targetUserId, User currentUser, int page, int size) {
         User targetUser = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng #" + targetUserId));

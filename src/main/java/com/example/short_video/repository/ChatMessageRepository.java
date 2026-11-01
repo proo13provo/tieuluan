@@ -27,6 +27,10 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
 
     Optional<ChatMessage> findFirstByConversationIdOrderByCreatedAtDesc(String conversationId);
 
+    @Query("SELECT m FROM ChatMessage m WHERE m.sender = :user OR m.receiver = :user " +
+            "ORDER BY m.createdAt DESC, m.id DESC")
+    List<ChatMessage> findLatestMessagesByUser(@Param("user") User user, Pageable pageable);
+
     @Modifying
     @Transactional
     @Query("UPDATE ChatMessage m SET m.isRead = true WHERE m.conversationId = :convId AND m.receiver = :user AND m.isRead = false")

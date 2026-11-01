@@ -17,6 +17,10 @@ public interface FollowService {
 
     FollowStatusResponse getFollowStatus(User currentUser, Long targetUserId);
 
+    FollowStatusResponse getFollowStatusBetween(Long sourceUserId, Long targetUserId);
+
+    java.util.Map<Long, FollowStatusResponse> getBatchFollowStatus(User currentUser, java.util.Collection<Long> targetUserIds);
+
     Page<UserSummaryResponse> getFollowers(Long targetUserId, User currentUser, int page, int size);
 
     Page<UserSummaryResponse> getFollowing(Long targetUserId, User currentUser, int page, int size);

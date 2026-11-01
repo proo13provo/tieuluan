@@ -11,6 +11,8 @@ public interface ChatService {
 
     ChatMessageResponse sendMessage(User sender, Long targetUserId, String content);
 
+    ChatMessageResponse shareVideoWithLatestChat(User sender, Long videoId);
+
     List<ChatMessageResponse> getMessageHistory(User currentUser, Long targetUserId, Pageable pageable);
 
     List<ConversationResponse> getConversations(User currentUser);

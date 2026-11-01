@@ -1,18 +1,23 @@
 package com.example.short_video.service.imp;
 
+import com.example.short_video.Enum.MessageType;
+import com.example.short_video.Enum.VideoStatus;
 import com.example.short_video.dto.response.ChatMessageResponse;
 import com.example.short_video.dto.response.ConversationResponse;
 import com.example.short_video.dto.response.UserSummaryResponse;
 import com.example.short_video.entity.ChatMessage;
 import com.example.short_video.entity.User;
+import com.example.short_video.entity.Video;
 import com.example.short_video.exception.AppException;
 import com.example.short_video.repository.ChatMessageRepository;
 import com.example.short_video.repository.UserRepository;
+import com.example.short_video.repository.VideoRepository;
 import com.example.short_video.service.ChatService;
 import com.example.short_video.service.FollowService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -30,12 +35,59 @@ public class ChatServiceImpl implements ChatService {
 
     private final ChatMessageRepository chatMessageRepository;
     private final UserRepository userRepository;
+    private final VideoRepository videoRepository;
     private final FollowService followService;
     private final SimpMessagingTemplate messagingTemplate;
 
     @Override
     @Transactional
     public ChatMessageResponse sendMessage(User sender, Long targetUserId, String content) {
+        return persistMessage(sender, targetUserId, content, MessageType.TEXT, null);
+    }
+
+    @Override
+    @Transactional
+    public ChatMessageResponse shareVideoWithLatestChat(User sender, Long videoId) {
+        Video video = videoRepository.findById(videoId)
+                .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy video #" + videoId));
+        if (video.getStatus() != VideoStatus.PUBLISHED) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Chỉ có thể chia sẻ video đã xuất bản");
+        }
+
+        ChatMessage latestMessage = chatMessageRepository
+                .findLatestMessagesByUser(sender, PageRequest.of(0, 1))
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new AppException(
+                        HttpStatus.BAD_REQUEST,
+                        "Bạn chưa có cuộc trò chuyện nào để chia sẻ video"
+                ));
+
+        Long recipientId = latestMessage.getSender().getId().equals(sender.getId())
+                ? latestMessage.getReceiver().getId()
+                : latestMessage.getSender().getId();
+        String title = video.getTitle() == null || video.getTitle().isBlank()
+                ? "Video #" + video.getId()
+                : video.getTitle();
+
+        ChatMessageResponse response = persistMessage(
+                sender,
+                recipientId,
+                "🎥 " + title,
+                MessageType.VIDEO,
+                video
+        );
+        videoRepository.incrementShares(videoId);
+        return response;
+    }
+
+    private ChatMessageResponse persistMessage(
+            User sender,
+            Long targetUserId,
+            String content,
+            MessageType messageType,
+            Video video
+    ) {
         if (sender.getId().equals(targetUserId)) {
             throw new AppException(HttpStatus.BAD_REQUEST, "Bạn không thể tự gửi tin nhắn cho chính mình");
         }
@@ -43,11 +95,8 @@ public class ChatServiceImpl implements ChatService {
         User receiver = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người nhận #" + targetUserId));
 
-        // KIỂM TRA ĐIỀU KIỆN TIÊN QUYẾT: THEO DÕI LẪN NHAU (MUTUAL FOLLOW)
-        boolean isMutual = followService.areMutualFriends(sender, receiver);
-        if (!isMutual) {
-            throw new AppException(HttpStatus.FORBIDDEN,
-                    "Bạn chỉ có thể nhắn tin khi cả hai đã cùng theo dõi lẫn nhau (bạn bè)");
+        if (Boolean.FALSE.equals(receiver.getIsActive())) {
+            throw new AppException(HttpStatus.BAD_REQUEST, "Tài khoản người nhận hiện đang bị khóa");
         }
 
         String conversationId = ChatMessage.buildConversationId(sender.getId(), receiver.getId());
@@ -56,21 +105,15 @@ public class ChatServiceImpl implements ChatService {
                 .sender(sender)
                 .receiver(receiver)
                 .content(content.trim())
+                .messageType(messageType)
+                .video(video)
                 .conversationId(conversationId)
                 .isRead(false)
                 .build();
         msg = chatMessageRepository.save(msg);
 
-        log.info("[Chat] Sent message from user {} to user {} in {}",
-                sender.getUsername(), receiver.getUsername(), conversationId);
-
         ChatMessageResponse response = toResponse(msg, sender.getId());
-
-        // Bắn WebSocket Realtime tới:
-        // 1. Topic phòng chat giữa 2 người: /topic/chat/{conversationId}
         messagingTemplate.convertAndSend("/topic/chat/" + conversationId, response);
-
-        // 2. Kênh cá nhân của người nhận để hiển thị thông báo / badge realtime:
         messagingTemplate.convertAndSend("/topic/user/" + receiver.getId() + "/messages", response);
 
         return response;
@@ -83,8 +126,6 @@ public class ChatServiceImpl implements ChatService {
                 .orElseThrow(() -> new AppException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng #" + targetUserId));
 
         String conversationId = ChatMessage.buildConversationId(currentUser.getId(), targetUser.getId());
-
-        // Đánh dấu các tin nhắn người khác gửi cho mình trong hội thoại này là ĐÃ ĐỌC
         chatMessageRepository.markConversationAsRead(conversationId, currentUser);
 
         Page<ChatMessage> page = chatMessageRepository
@@ -93,8 +134,6 @@ public class ChatServiceImpl implements ChatService {
         List<ChatMessageResponse> list = page.getContent().stream()
                 .map(m -> toResponse(m, currentUser.getId()))
                 .collect(Collectors.toList());
-
-        // Đảo lại thứ tự tăng dần theo thời gian (cũ -> mới) cho giao diện chat
         Collections.reverse(list);
         return list;
     }
@@ -141,8 +180,6 @@ public class ChatServiceImpl implements ChatService {
                     .updatedAt(lastMsg.getCreatedAt())
                     .build());
         }
-
-        // Sắp xếp các cuộc trò chuyện có tin nhắn mới nhất lên đầu
         result.sort((a, b) -> {
             if (a.getUpdatedAt() == null && b.getUpdatedAt() == null) return 0;
             if (a.getUpdatedAt() == null) return 1;
@@ -171,7 +208,7 @@ public class ChatServiceImpl implements ChatService {
     public boolean canChat(User currentUser, Long targetUserId) {
         if (currentUser.getId().equals(targetUserId)) return false;
         return userRepository.findById(targetUserId)
-                .map(targetUser -> followService.areMutualFriends(currentUser, targetUser))
+                .map(targetUser -> Boolean.TRUE.equals(targetUser.getIsActive()))
                 .orElse(false);
     }
 
@@ -188,6 +225,10 @@ public class ChatServiceImpl implements ChatService {
                 .receiverUsername(r.getUsername())
                 .receiverAvatarUrl(r.getAvatarUrl())
                 .content(m.getContent())
+                .messageType(m.getMessageType() != null ? m.getMessageType() : MessageType.TEXT)
+                .videoId(m.getVideo() != null ? m.getVideo().getId() : null)
+                .videoTitle(m.getVideo() != null ? m.getVideo().getTitle() : null)
+                .videoThumbnailUrl(m.getVideo() != null ? m.getVideo().getThumbnailUrl() : null)
                 .isRead(Boolean.TRUE.equals(m.getIsRead()))
                 .createdAt(m.getCreatedAt())
                 .isMine(s.getId().equals(currentUserId))

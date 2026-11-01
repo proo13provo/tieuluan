@@ -14,4 +14,6 @@ public interface HashtagRepository extends JpaRepository<Hashtag, Long> {
     List<Hashtag> findByNameStartingWithIgnoreCaseOrderByUsageCountDesc(String prefix, Pageable pageable);
     List<Hashtag> findByNameContainingIgnoreCaseOrderByUsageCountDesc(String keyword, Pageable pageable);
     List<Hashtag> findAllByOrderByUsageCountDesc(Pageable pageable);
+    org.springframework.data.domain.Page<Hashtag> findByNameContainingIgnoreCase(String keyword, Pageable pageable);
+    boolean existsByName(String name);
 }

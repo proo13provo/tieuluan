@@ -19,8 +19,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import org.springframework.data.domain.Page;
 
+import com.example.short_video.dto.request.BatchFollowStatusRequest;
 import com.example.short_video.dto.response.FollowStatusResponse;
 import com.example.short_video.dto.response.UserSummaryResponse;
 import com.example.short_video.entity.User;
@@ -28,7 +30,7 @@ import com.example.short_video.service.FollowService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping({"/api/user", "/api/users"})
 @RequiredArgsConstructor
 @Tag(name = "Người dùng & Quan hệ (User & Follow)", description = "Các API thông tin cá nhân, cập nhật profile, follow, followers, following, bạn bè")
 public class UserController {
@@ -152,11 +154,35 @@ public class UserController {
     public ResponseEntity<ApiResponse<FollowStatusResponse>> getFollowStatus(
             @PathVariable Long userId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        if (userDetails == null) {
-            throw new AuthenticationFailedException("Vui lòng đăng nhập để thực hiện chức năng này");
-        }
-        FollowStatusResponse response = followService.getFollowStatus(userDetails.getUser(), userId);
+        User currentUser = userDetails != null ? userDetails.getUser() : null;
+        FollowStatusResponse response = followService.getFollowStatus(currentUser, userId);
         return ResponseEntity.ok(ApiResponse.success("Trạng thái theo dõi", response));
+    }
+
+    @GetMapping("/{sourceUserId}/follow-status/{targetUserId}")
+    public ResponseEntity<ApiResponse<FollowStatusResponse>> getFollowStatusBetween(
+            @PathVariable Long sourceUserId,
+            @PathVariable Long targetUserId) {
+        FollowStatusResponse response = followService.getFollowStatusBetween(sourceUserId, targetUserId);
+        return ResponseEntity.ok(ApiResponse.success("Trạng thái theo dõi giữa hai người dùng", response));
+    }
+
+    @PostMapping("/follow-status/batch")
+    public ResponseEntity<ApiResponse<Map<Long, FollowStatusResponse>>> getBatchFollowStatusPost(
+            @Valid @RequestBody BatchFollowStatusRequest request,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        User currentUser = userDetails != null ? userDetails.getUser() : null;
+        Map<Long, FollowStatusResponse> response = followService.getBatchFollowStatus(currentUser, request.getTargetUserIds());
+        return ResponseEntity.ok(ApiResponse.success("Danh sách trạng thái theo dõi hàng loạt", response));
+    }
+
+    @GetMapping("/follow-status/batch")
+    public ResponseEntity<ApiResponse<Map<Long, FollowStatusResponse>>> getBatchFollowStatusGet(
+            @RequestParam("targetUserIds") List<Long> targetUserIds,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        User currentUser = userDetails != null ? userDetails.getUser() : null;
+        Map<Long, FollowStatusResponse> response = followService.getBatchFollowStatus(currentUser, targetUserIds);
+        return ResponseEntity.ok(ApiResponse.success("Danh sách trạng thái theo dõi hàng loạt", response));
     }
 
     @GetMapping("/{userId}/followers")

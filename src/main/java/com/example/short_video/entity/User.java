@@ -56,8 +56,20 @@ public class User {
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
 
+    @Column(name = "warning_count")
+    @Builder.Default
+    private Integer warningCount = 0;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<UserWarning> warnings = new ArrayList<>();
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
     private List<UserAuthProvider> authProviders = new ArrayList<>();
+
+    public void incrementWarningCount() {
+        this.warningCount = (this.warningCount == null ? 0 : this.warningCount) + 1;
+    }
 }
 

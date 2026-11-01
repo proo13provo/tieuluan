@@ -1,4 +1,4 @@
-package com.example.short_video.config;
+package com.example.short_video.websocket;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;

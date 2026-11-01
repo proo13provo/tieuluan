@@ -1,4 +1,4 @@
-package com.example.short_video.controller;
+package com.example.short_video.websocket;
 
 import java.security.Principal;
 
@@ -13,10 +13,7 @@ import com.example.short_video.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Controller xử lý nhận tin nhắn gửi trực tiếp qua WebSocket STOMP.
- * Client gửi tới destination: /app/chat.send
- */
+
 @Controller
 @RequiredArgsConstructor
 @Slf4j

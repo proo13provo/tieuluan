@@ -42,15 +42,37 @@ public class SecurityConfig {
                                 "/swagger-ui.html"
                         ).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/user/*/profile").permitAll()
-                        .requestMatchers("/api/user/*/videos").permitAll()
-                        .requestMatchers("/api/user/*/followers").permitAll()
-                        .requestMatchers("/api/user/*/following").permitAll()
+                        .requestMatchers("/api/user/*/profile", "/api/users/*/profile").permitAll()
+                        .requestMatchers("/api/user/*/videos", "/api/users/*/videos").permitAll()
+                        .requestMatchers("/api/user/*/followers", "/api/users/*/followers").permitAll()
+                        .requestMatchers("/api/user/*/following", "/api/users/*/following").permitAll()
+                        .requestMatchers("/api/user/*/follow-status/**", "/api/users/*/follow-status/**", "/api/user/follow-status/**", "/api/users/follow-status/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/follow/**", "/api/follows/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/follow/status/batch", "/api/follow/batch-status", "/api/follows/status/batch", "/api/user/follow-status/batch", "/api/users/follow-status/batch").permitAll()
                         .requestMatchers("/api/video/hashtags/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/feed/**", "/api/videos/feed").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/search/**", "/api/search", "/api/videos/search/**", "/api/videos/search", "/api/users/search/**", "/api/users/search").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/videos/*/share").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/live/feed").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/live/user/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/live/*").permitAll()
-                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers(
+                                "/api/admin/users/*/roles/**",
+                                "/api/admin/users/*/grant-moderator",
+                                "/api/admin/users/*/revoke-moderator",
+                                "/api/admin/users/*/moderator",
+                                "/api/admin/roles/**",
+                                "/api/moderation/users/*/roles/**",
+                                "/api/moderation/users/*/grant-moderator",
+                                "/api/moderation/users/*/revoke-moderator",
+                                "/api/moderation/users/*/moderator",
+                                "/api/moderation/roles/**"
+                        ).hasRole("ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/admin/categories/**", "/api/moderation/categories/**").hasRole("ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/admin/categories/**", "/api/moderation/categories/**", "/api/admin/hashtags/**", "/api/moderation/hashtags/**").hasRole("ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/admin/categories/**", "/api/moderation/categories/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**", "/api/moderation/**").hasAnyRole("ADMIN", "MODERATOR")
+                        .requestMatchers("/api/reports/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())

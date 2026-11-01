@@ -20,4 +20,7 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
     boolean existsByVideoAndUser(Video video, User user);
     long countByVideo(Video video);
     void deleteByVideoAndUser(Video video, User user);
+
+    @Query("SELECT l.video.id FROM Like l WHERE l.user = :user")
+    java.util.List<Long> findLikedVideoIdsByUser(@Param("user") User user);
 }

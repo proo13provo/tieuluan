@@ -24,6 +24,8 @@ public interface VideoMapper {
     @Mapping(target = "categories", source = "categories", qualifiedByName = "categoriesToNames")
     @Mapping(target = "status", expression = "java(video.getStatus() != null ? video.getStatus().name() : null)")
     @Mapping(target = "liked", ignore = true)
+    @Mapping(target = "matchReason", ignore = true)
+    @Mapping(target = "searchScore", ignore = true)
     VideoResponse toVideoResponse(Video video);
 
 
